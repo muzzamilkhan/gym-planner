@@ -11,6 +11,7 @@ import {
 } from '@/lib/engine'
 import { allExercises } from '@/lib/exercises'
 import { useProgram } from '@/hooks/use-program'
+import { Analytics } from '@/components/analytics'
 import { Header } from '@/components/header'
 import { Planner } from '@/components/planner'
 import { SetupBar } from '@/components/setup-bar'
@@ -66,7 +67,9 @@ export function Editor({
             onChange={setProgram}
           />
         </div>
-        <div className="lg:w-1/3">{/* Analytics — Task 13 */}</div>
+        <aside className="lg:sticky lg:top-4 lg:w-1/3 lg:self-start max-lg:hidden">
+          <Analytics coverage={coverage} warnings={warnings} />
+        </aside>
       </div>
     </div>
   )
