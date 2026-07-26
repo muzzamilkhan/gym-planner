@@ -12,6 +12,7 @@ import {
 import { allExercises } from '@/lib/exercises'
 import { useProgram } from '@/hooks/use-program'
 import { Analytics } from '@/components/analytics'
+import { AnalyticsSheet } from '@/components/analytics-sheet'
 import { Header } from '@/components/header'
 import { Planner } from '@/components/planner'
 import { SetupBar } from '@/components/setup-bar'
@@ -71,6 +72,8 @@ export function Editor({
           <Analytics coverage={coverage} warnings={warnings} />
         </aside>
       </div>
+      <div className="h-12 lg:hidden" aria-hidden />
+      <AnalyticsSheet coverage={coverage} warnings={warnings} />
     </div>
   )
 }

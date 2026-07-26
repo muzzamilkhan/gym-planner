@@ -14,6 +14,7 @@ import type { Day, DayExercise, Exercise, Program, RecoveryWarning } from '@/lib
 import { normalizeSupersets } from '@/lib/engine'
 import { DayColumn } from '@/components/day-column'
 import { CustomExerciseSheet } from '@/components/custom-exercise-sheet'
+import { MobileDayPager } from '@/components/mobile-day-pager'
 
 export const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 export const DAY_NAMES_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
@@ -148,27 +149,32 @@ export function Planner({
     setSelected(new Set())
   }
 
+  const renderDay = (i: number) => (
+    <DayColumn
+      key={i}
+      dayIndex={i}
+      dayName={DAY_NAMES[i]}
+      day={program.days[i]}
+      readOnly={readOnly}
+      exercises={exercises}
+      warnings={warningsByDay.get(i) ?? []}
+      onChangeDay={(next) => setDay(i, next)}
+      onCreateCustom={() => setCustomOpen(true)}
+      selectedKeys={selected}
+      onToggleSelect={readOnly ? undefined : toggleSelect}
+      onGroupSelection={groupSelection}
+      canGroupSelection={selectionInfo?.day === i}
+    />
+  )
+
   return (
-    <div className="overflow-x-auto">
+    <div className="lg:overflow-x-auto">
       <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={onDragEnd}>
-        <div className="grid min-w-[1100px] grid-cols-7 gap-2">
-          {program.days.map((day, i) => (
-            <DayColumn
-              key={i}
-              dayIndex={i}
-              dayName={DAY_NAMES[i]}
-              day={day}
-              readOnly={readOnly}
-              exercises={exercises}
-              warnings={warningsByDay.get(i) ?? []}
-              onChangeDay={(next) => setDay(i, next)}
-              onCreateCustom={() => setCustomOpen(true)}
-              selectedKeys={selected}
-              onToggleSelect={readOnly ? undefined : toggleSelect}
-              onGroupSelection={groupSelection}
-              canGroupSelection={selectionInfo?.day === i}
-            />
-          ))}
+        <div className="hidden min-w-[1100px] grid-cols-7 gap-2 lg:grid">
+          {program.days.map((_, i) => renderDay(i))}
+        </div>
+        <div className="lg:hidden">
+          <MobileDayPager renderDay={renderDay} />
         </div>
       </DndContext>
       <CustomExerciseSheet
