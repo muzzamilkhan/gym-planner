@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Updated color tokens to match modern fitness app design with mint/teal accents */
+  --background: 0 0% 100%; /* White background */
+  --foreground: 240 10% 3.9%; /* Dark gray text */
+  --card: 0 0% 100%; /* White UI elements */
+  --card-foreground: 240 10% 3.9%; /* Dark gray text for cards */
+  --popover: 0 0% 100%; /* White for popover elements */
+  --popover-foreground: 240 10% 3.9%; /* Dark gray text for popovers */
+  --primary: 180 50% 60%; /* Mint/teal primary color */
+  --primary-foreground: 0 0% 98%; /* Light text for primary buttons */
+  --secondary: 240 4.8% 95.9%; /* Light secondary color */
+  --secondary-foreground: 240 5.9% 10%; /* Dark text for secondary buttons */
+  --muted: 240 4.8% 95.9%; /* Light gray for muted backgrounds */
+  --muted-foreground: 240 3.8% 46.1%; /* Gray for muted text */
+  --accent: 180 50% 60%; /* Mint/teal for accents */
+  --accent-foreground: 240 5.9% 10%; /* Dark text for accent elements */
+  --destructive: 0 84.2% 60.2%; /* Red for destructive actions */
+  --destructive-foreground: 0 0% 98%; /* White text for destructive actions */
+  --border: 240 5.9% 90%; /* Gray for borders */
+  --input: 240 5.9% 90%; /* Light gray for input fields */
+  --ring: 180 50% 60%; /* Mint/teal ring for focus states */
+  --chart-1: 180 50% 60%; /* Primary chart color - mint/teal */
+  --chart-2: 240 3.8% 46.1%; /* Secondary chart color - gray */
+  --chart-3: 142 70% 45%; /* Success chart color - green */
+  --chart-4: 48 96% 53%; /* Warning chart color - yellow */
+  --chart-5: 0 84.2% 60.2%; /* Danger chart color - red */
+  --radius: 0.75rem; /* More rounded corners for modern look */
+}
+
+.dark {
+  /* Updated dark theme with modern dark colors and mint/teal accents */
+  --background: 240 10% 3.9%; /* Very dark background */
+  --foreground: 0 0% 98%; /* Light text */
+  --card: 240 10% 3.9%; /* Dark card background */
+  --card-foreground: 0 0% 98%; /* Light text for cards */
+  --popover: 240 10% 3.9%; /* Dark popover background */
+  --popover-foreground: 0 0% 98%; /* Light text for popovers */
+  --primary: 180 50% 60%; /* Bright mint/teal primary */
+  --primary-foreground: 240 5.9% 10%; /* Dark text for primary buttons */
+  --secondary: 240 3.7% 15.9%; /* Dark secondary */
+  --secondary-foreground: 0 0% 98%; /* Light text for secondary */
+  --muted: 240 3.7% 15.9%; /* Dark muted background */
+  --muted-foreground: 240 5% 64.9%; /* Light gray for muted text */
+  --accent: 180 50% 60%; /* Bright mint/teal accent */
+  --accent-foreground: 0 0% 98%; /* Light text for accents */
+  --destructive: 0 62.8% 30.6%; /* Red for destructive actions */
+  --destructive-foreground: 0 0% 98%; /* Light text for destructive */
+  --border: 240 3.7% 15.9%; /* Dark border */
+  --input: 240 3.7% 15.9%; /* Dark input background */
+  --ring: 180 50% 60%; /* Mint/teal focus ring */
+  --chart-1: 180 50% 60%; /* Primary chart - mint/teal */
+  --chart-2: 240 5% 64.9%; /* Secondary chart - light gray */
+  --chart-3: 142 70% 45%; /* Success chart - green */
+  --chart-4: 48 96% 53%; /* Warning chart - yellow */
+  --chart-5: 0 84.2% 60.2%; /* Danger chart - red */
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* Internet Explorer 10+ */
+    scrollbar-width: none;  /* Firefox */
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* Safari and Chrome */
+  }
+}
