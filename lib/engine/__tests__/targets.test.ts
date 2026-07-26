@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
+import type { Goal } from '../types'
 import { MUSCLES } from '../taxonomy'
 import { BASE_IDEAL, getFocusedMuscles, getTargets } from '../targets'
 
-const balanced = { mode: 'balanced' } as const
+const balanced: Goal = { mode: 'balanced' }
 
 describe('BASE_IDEAL', () => {
   it('spot-checks the hypertrophy table', () => {
@@ -32,7 +33,7 @@ describe('getTargets — balanced', () => {
 })
 
 describe('getTargets — focused', () => {
-  const goal = { mode: 'focused', targets: [{ kind: 'muscle', muscle: 'Chest' }] } as const
+  const goal: Goal = { mode: 'focused', targets: [{ kind: 'muscle', muscle: 'Chest' }] }
 
   it('boosts the focused muscle 1.5x with MRV cap and old ideal as floor', () => {
     const t = getTargets('Hypertrophy', 'intermediate', goal)
@@ -55,7 +56,7 @@ describe('getTargets — focused', () => {
   })
 
   it('expands a group target to its member muscles', () => {
-    const g = { mode: 'focused', targets: [{ kind: 'group', group: 'Arms' }] } as const
+    const g: Goal = { mode: 'focused', targets: [{ kind: 'group', group: 'Arms' }] }
     const focused = getFocusedMuscles(g)
     expect(focused).toEqual(new Set(['Biceps', 'Triceps', 'Forearms']))
     const t = getTargets('Hypertrophy', 'intermediate', g)
@@ -64,14 +65,14 @@ describe('getTargets — focused', () => {
   })
 
   it('throws on more than 2 targets (and on zero)', () => {
-    const three = {
+    const three: Goal = {
       mode: 'focused',
       targets: [
         { kind: 'muscle', muscle: 'Chest' },
         { kind: 'muscle', muscle: 'Lats' },
         { kind: 'muscle', muscle: 'Quads' },
       ],
-    } as const
+    }
     expect(() => getTargets('Hypertrophy', 'beginner', three)).toThrow()
     expect(() => getTargets('Hypertrophy', 'beginner', { mode: 'focused', targets: [] })).toThrow()
   })

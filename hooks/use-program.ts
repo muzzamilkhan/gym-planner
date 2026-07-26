@@ -12,7 +12,7 @@ export function useProgram(initial: { program: Program; editId?: string; viewId?
   const [saveState, setSaveState] = useState<SaveState>('saved')
   const [editId, setEditId] = useState<string | undefined>(initial.editId)
   const [viewId, setViewId] = useState<string | undefined>(initial.viewId)
-  const timer = useRef<ReturnType<typeof setTimeout>>()
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const latest = useRef(program)
   const ids = useRef({ editId, viewId })
   ids.current = { editId, viewId }
