@@ -18,6 +18,13 @@ Next.js (App Router) + React + TypeScript, Tailwind + shadcn/ui, dnd-kit, Prisma
 - `npx vitest run` — run all unit tests; `npx vitest run lib/engine/__tests__/volume.test.ts` for a single suite.
 - `npx prisma migrate dev` / `npx prisma generate` — schema changes (needs `DATABASE_URL`).
 
+## Workflow
+
+This is a hobby project — optimize for momentum, not ceremony.
+
+- **Work directly on `main`** unless the user explicitly asks for a branch. Don't create feature branches or PRs by default.
+- **Always commit and push** when work is complete. Don't wait to be asked, and don't leave changes sitting uncommitted.
+
 ## Architecture: pure domain core + thin UI
 
 All business logic lives in `lib/engine/` as **pure functions with zero React/Next/Prisma imports**: types, muscle taxonomy (22 canonical muscles + alias map), volume targets, weekly volume, coverage, recovery warnings, superset normalization. UI components (`components/`) and API routes (`app/api/programs/*`) are thin consumers — no domain logic outside the engine.
