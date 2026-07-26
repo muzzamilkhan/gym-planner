@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useDroppable } from '@dnd-kit/core'
-import { GripVertical, Link2Off } from 'lucide-react'
+import { BedDouble, GripVertical, Link2Off } from 'lucide-react'
 import type { Day, DayExercise, Exercise, RecoveryWarning } from '@/lib/engine'
 import { normalizeSupersets } from '@/lib/engine'
 import { cn } from '@/lib/utils'
@@ -167,18 +167,44 @@ export function DayColumn({
 
   const units = dayUnits(dayIndex, day)
 
+  // Rest days collapse to a narrow strip: just a bed icon, no day name, no controls.
+  if (day.type === 'rest') {
+    const body = (
+      <div ref={setDropRef} className="grid flex-1 place-items-center">
+        <BedDouble className="h-5 w-5 text-muted-foreground/70" />
+      </div>
+    )
+    return (
+      <div
+        className="flex min-h-48 flex-col rounded-lg border bg-muted/40 p-2"
+        title={`${dayName} — rest day`}
+      >
+        {readOnly ? (
+          body
+        ) : (
+          <button
+            className="grid flex-1 place-items-center rounded-md hover:bg-muted/60"
+            aria-label={`${dayName} — rest day, switch to work day`}
+            onClick={toggleType}
+          >
+            <BedDouble className="h-5 w-5 text-muted-foreground/70" />
+          </button>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div
       className={cn(
         'flex min-h-48 flex-col gap-2 rounded-lg border p-2',
-        day.type === 'rest' && 'bg-muted/40',
         warnings.some((w) => w.severity === 'critical') && 'border-destructive/60',
       )}
     >
       <div className="flex items-center justify-between gap-1">
         <span className="text-sm font-semibold">{dayName}</span>
         {readOnly ? (
-          <span className="text-xs text-muted-foreground">{day.type === 'rest' ? 'Rest' : 'Work'}</span>
+          <span className="text-xs text-muted-foreground">Work</span>
         ) : (
           <Button
             variant="ghost"
@@ -186,63 +212,55 @@ export function DayColumn({
             className={cn('h-6 px-2 text-xs', confirmingRest && 'text-destructive')}
             onClick={toggleType}
           >
-            {day.type === 'rest' ? 'Rest day' : confirmingRest ? 'Clear day?' : 'Work day'}
+            {confirmingRest ? 'Clear day?' : 'Work day'}
           </Button>
         )}
       </div>
 
-      {day.type === 'rest' ? (
-        <div ref={setDropRef} className="grid flex-1 place-items-center text-xs text-muted-foreground">
-          Rest
-        </div>
-      ) : (
-        <>
-          {canGroupSelection && (
-            <Button size="sm" className="h-7" onClick={onGroupSelection}>
-              Group as superset
-            </Button>
-          )}
-          <SortableContext items={units.map((u) => u.id)} strategy={verticalListSortingStrategy}>
-            <div ref={setDropRef} className="flex flex-1 flex-col gap-2">
-              {units.map((unit) => (
-                <SortableUnit key={unit.id} id={unit.id} disabled={readOnly}>
-                  {(handle) =>
-                    unit.kind === 'single' ? (
-                      <div className="flex items-start gap-0.5">
-                        {handle}
-                        <div className="min-w-0 flex-1">{card(unit.index, false)}</div>
-                      </div>
-                    ) : (
-                      <div className="flex items-start gap-0.5">
-                        {handle}
-                        <div className="min-w-0 flex-1">
-                          <SupersetBlock readOnly={readOnly} onUngroup={() => ungroup(unit.supersetId)}>
-                            {unit.indices.map((i) => card(i, true))}
-                          </SupersetBlock>
-                        </div>
-                      </div>
-                    )
-                  }
-                </SortableUnit>
-              ))}
-            </div>
-          </SortableContext>
-          {!readOnly && (
-            <AddExercise
-              exercises={exercises}
-              onCreateCustom={onCreateCustom}
-              onAdd={(ex) =>
-                setDay({
-                  ...day,
-                  exercises: [
-                    ...day.exercises,
-                    { exerciseId: ex.id, name: ex.name, sets: 3, reps: '8-12' },
-                  ],
-                })
+      {canGroupSelection && (
+        <Button size="sm" className="h-7" onClick={onGroupSelection}>
+          Group as superset
+        </Button>
+      )}
+      <SortableContext items={units.map((u) => u.id)} strategy={verticalListSortingStrategy}>
+        <div ref={setDropRef} className="flex flex-1 flex-col gap-2">
+          {units.map((unit) => (
+            <SortableUnit key={unit.id} id={unit.id} disabled={readOnly}>
+              {(handle) =>
+                unit.kind === 'single' ? (
+                  <div className="flex items-start gap-0.5">
+                    {handle}
+                    <div className="min-w-0 flex-1">{card(unit.index, false)}</div>
+                  </div>
+                ) : (
+                  <div className="flex items-start gap-0.5">
+                    {handle}
+                    <div className="min-w-0 flex-1">
+                      <SupersetBlock readOnly={readOnly} onUngroup={() => ungroup(unit.supersetId)}>
+                        {unit.indices.map((i) => card(i, true))}
+                      </SupersetBlock>
+                    </div>
+                  </div>
+                )
               }
-            />
-          )}
-        </>
+            </SortableUnit>
+          ))}
+        </div>
+      </SortableContext>
+      {!readOnly && (
+        <AddExercise
+          exercises={exercises}
+          onCreateCustom={onCreateCustom}
+          onAdd={(ex) =>
+            setDay({
+              ...day,
+              exercises: [
+                ...day.exercises,
+                { exerciseId: ex.id, name: ex.name, sets: 3, reps: '8-12' },
+              ],
+            })
+          }
+        />
       )}
     </div>
   )

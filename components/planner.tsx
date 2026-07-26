@@ -170,7 +170,15 @@ export function Planner({
   return (
     <div className="lg:overflow-x-auto">
       <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={onDragEnd}>
-        <div className="hidden min-w-[1100px] grid-cols-7 gap-2 lg:grid">
+        {/* Rest days collapse to a fixed narrow column; work days share the remaining space. */}
+        <div
+          className="hidden gap-2 lg:grid"
+          style={{
+            gridTemplateColumns: program.days
+              .map((d) => (d.type === 'rest' ? '3rem' : 'minmax(9.5rem, 1fr)'))
+              .join(' '),
+          }}
+        >
           {program.days.map((_, i) => renderDay(i))}
         </div>
         <div className="lg:hidden">

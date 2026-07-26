@@ -1,6 +1,9 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import { PanelRightClose, PanelRightOpen } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import {
   getCoverage,
   getRecoveryWarnings,
@@ -27,6 +30,7 @@ export function Editor({
   onCopyProgram?: () => void
 }) {
   const { program, setProgram, saveState, editId, viewId, retry } = useProgram(initial)
+  const [analyticsOpen, setAnalyticsOpen] = useState(true)
   const exercises = useMemo(() => allExercises(program), [program])
   const targets = useMemo(
     () => getTargets(program.focus, program.experience, program.goal),
@@ -59,7 +63,7 @@ export function Editor({
       />
       <SetupBar program={program} readOnly={readOnly} onChange={setProgram} />
       <div className="flex flex-1 gap-4 p-4 max-lg:flex-col">
-        <div className="min-w-0 lg:w-2/3">
+        <div className={cn('min-w-0', analyticsOpen ? 'lg:w-2/3' : 'lg:flex-1')}>
           <Planner
             program={program}
             readOnly={readOnly}
@@ -68,8 +72,36 @@ export function Editor({
             onChange={setProgram}
           />
         </div>
-        <aside className="lg:sticky lg:top-4 lg:w-1/3 lg:self-start max-lg:hidden">
-          <Analytics coverage={coverage} warnings={warnings} />
+        <aside
+          className={cn(
+            'lg:sticky lg:top-4 lg:self-start max-lg:hidden',
+            analyticsOpen ? 'lg:w-1/3' : 'lg:w-auto',
+          )}
+        >
+          <div className={cn('flex items-center', analyticsOpen ? 'justify-end' : 'justify-center')}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 gap-1 px-2 text-xs text-muted-foreground"
+              aria-expanded={analyticsOpen}
+              onClick={() => setAnalyticsOpen((v) => !v)}
+            >
+              {analyticsOpen ? (
+                <>
+                  <PanelRightClose className="h-4 w-4" />
+                  Hide
+                </>
+              ) : (
+                <PanelRightOpen className="h-4 w-4" />
+              )}
+              <span className="sr-only">{analyticsOpen ? 'Hide analytics' : 'Show analytics'}</span>
+            </Button>
+          </div>
+          {analyticsOpen && (
+            <div className="mt-2">
+              <Analytics coverage={coverage} warnings={warnings} />
+            </div>
+          )}
         </aside>
       </div>
       <div className="h-12 lg:hidden" aria-hidden />
