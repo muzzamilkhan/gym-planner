@@ -1,12 +1,71 @@
 'use client'
 
 import { useState } from 'react'
+import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+import { useDroppable } from '@dnd-kit/core'
+import { GripVertical, Link2Off } from 'lucide-react'
 import type { Day, DayExercise, Exercise, RecoveryWarning } from '@/lib/engine'
 import { normalizeSupersets } from '@/lib/engine'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { AddExercise } from '@/components/add-exercise'
 import { ExerciseCard } from '@/components/exercise-card'
+import { SupersetBlock } from '@/components/superset-block'
+
+/** A drag unit: one loose exercise, or one whole superset group. */
+export type DayUnit =
+  | { kind: 'single'; id: string; index: number }
+  | { kind: 'group'; id: string; supersetId: string; indices: number[] }
+
+export function dayUnits(dayIndex: number, day: Day): DayUnit[] {
+  const units: DayUnit[] = []
+  const seen = new Set<string>()
+  day.exercises.forEach((ex, index) => {
+    if (!ex.supersetId) {
+      units.push({ kind: 'single', id: `${dayIndex}:i:${index}`, index })
+    } else if (!seen.has(ex.supersetId)) {
+      seen.add(ex.supersetId)
+      const indices = day.exercises.flatMap((e, i) => (e.supersetId === ex.supersetId ? [i] : []))
+      units.push({ kind: 'group', id: `${dayIndex}:g:${ex.supersetId}`, supersetId: ex.supersetId, indices })
+    }
+  })
+  return units
+}
+
+function SortableUnit({
+  id,
+  disabled,
+  children,
+}: {
+  id: string
+  disabled: boolean
+  children: (handle: React.ReactNode) => React.ReactNode
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id,
+    disabled,
+  })
+  const handle = disabled ? null : (
+    <button
+      className="mt-0.5 cursor-grab touch-none text-muted-foreground/60 hover:text-muted-foreground"
+      aria-label="Drag to reorder"
+      {...attributes}
+      {...listeners}
+    >
+      <GripVertical className="h-4 w-4" />
+    </button>
+  )
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      className={cn(isDragging && 'z-10 opacity-60')}
+    >
+      {children(handle)}
+    </div>
+  )
+}
 
 export function DayColumn({
   dayIndex,
@@ -19,7 +78,8 @@ export function DayColumn({
   onCreateCustom,
   selectedKeys,
   onToggleSelect,
-  renderList,
+  onGroupSelection,
+  canGroupSelection,
 }: {
   dayIndex: number
   dayName: string
@@ -31,10 +91,11 @@ export function DayColumn({
   onCreateCustom: () => void
   selectedKeys?: Set<string>
   onToggleSelect?: (key: string) => void
-  /** Task 12 injects the sortable list here; default renders plain cards. */
-  renderList?: (cards: React.ReactNode[]) => React.ReactNode
+  onGroupSelection?: () => void
+  canGroupSelection?: boolean
 }) {
   const [confirmingRest, setConfirmingRest] = useState(false)
+  const { setNodeRef: setDropRef } = useDroppable({ id: `${dayIndex}:drop`, disabled: readOnly })
 
   const setDay = (next: Day) => onChangeDay(normalizeSupersets(next))
 
@@ -46,6 +107,19 @@ export function DayColumn({
 
   const removeEntry = (index: number) => {
     setDay({ ...day, exercises: day.exercises.filter((_, i) => i !== index) })
+  }
+
+  const ejectFromGroup = (index: number) => {
+    updateEntry(index, { ...day.exercises[index], supersetId: undefined })
+  }
+
+  const ungroup = (supersetId: string) => {
+    setDay({
+      ...day,
+      exercises: day.exercises.map((e) =>
+        e.supersetId === supersetId ? { ...e, supersetId: undefined } : e,
+      ),
+    })
   }
 
   const toggleType = () => {
@@ -62,20 +136,36 @@ export function DayColumn({
     setDay({ type: 'rest', exercises: [] })
   }
 
-  const cards = day.exercises.map((entry, index) => {
+  const card = (index: number, inGroup: boolean) => {
+    const entry = day.exercises[index]
     const key = `${dayIndex}:${index}`
     return (
-      <ExerciseCard
-        key={key}
-        entry={entry}
-        readOnly={readOnly}
-        onUpdate={(next) => updateEntry(index, next)}
-        onRemove={() => removeEntry(index)}
-        selected={selectedKeys?.has(key)}
-        onToggleSelect={onToggleSelect ? () => onToggleSelect(key) : undefined}
-      />
+      <div key={key} className="flex items-start gap-0.5">
+        <div className="min-w-0 flex-1">
+          <ExerciseCard
+            entry={entry}
+            readOnly={readOnly}
+            onUpdate={(next) => updateEntry(index, next)}
+            onRemove={() => removeEntry(index)}
+            selected={selectedKeys?.has(key)}
+            onToggleSelect={!inGroup && onToggleSelect ? () => onToggleSelect(key) : undefined}
+          />
+        </div>
+        {inGroup && !readOnly && (
+          <button
+            aria-label="Remove from superset"
+            title="Remove from superset"
+            className="mt-1 text-muted-foreground/60 hover:text-muted-foreground"
+            onClick={() => ejectFromGroup(index)}
+          >
+            <Link2Off className="h-3.5 w-3.5" />
+          </button>
+        )}
+      </div>
     )
-  })
+  }
+
+  const units = dayUnits(dayIndex, day)
 
   return (
     <div
@@ -102,12 +192,41 @@ export function DayColumn({
       </div>
 
       {day.type === 'rest' ? (
-        <div className="grid flex-1 place-items-center text-xs text-muted-foreground">Rest</div>
+        <div ref={setDropRef} className="grid flex-1 place-items-center text-xs text-muted-foreground">
+          Rest
+        </div>
       ) : (
         <>
-          <div className="flex flex-1 flex-col gap-2">
-            {renderList ? renderList(cards) : cards}
-          </div>
+          {canGroupSelection && (
+            <Button size="sm" className="h-7" onClick={onGroupSelection}>
+              Group as superset
+            </Button>
+          )}
+          <SortableContext items={units.map((u) => u.id)} strategy={verticalListSortingStrategy}>
+            <div ref={setDropRef} className="flex flex-1 flex-col gap-2">
+              {units.map((unit) => (
+                <SortableUnit key={unit.id} id={unit.id} disabled={readOnly}>
+                  {(handle) =>
+                    unit.kind === 'single' ? (
+                      <div className="flex items-start gap-0.5">
+                        {handle}
+                        <div className="min-w-0 flex-1">{card(unit.index, false)}</div>
+                      </div>
+                    ) : (
+                      <div className="flex items-start gap-0.5">
+                        {handle}
+                        <div className="min-w-0 flex-1">
+                          <SupersetBlock readOnly={readOnly} onUngroup={() => ungroup(unit.supersetId)}>
+                            {unit.indices.map((i) => card(i, true))}
+                          </SupersetBlock>
+                        </div>
+                      </div>
+                    )
+                  }
+                </SortableUnit>
+              ))}
+            </div>
+          </SortableContext>
           {!readOnly && (
             <AddExercise
               exercises={exercises}
