@@ -12,6 +12,7 @@ import {
 import { allExercises } from '@/lib/exercises'
 import { useProgram } from '@/hooks/use-program'
 import { Header } from '@/components/header'
+import { Planner } from '@/components/planner'
 import { SetupBar } from '@/components/setup-bar'
 
 export function Editor({
@@ -56,7 +57,15 @@ export function Editor({
       />
       <SetupBar program={program} readOnly={readOnly} onChange={setProgram} />
       <div className="flex flex-1 gap-4 p-4 max-lg:flex-col">
-        <div className="min-w-0 lg:w-2/3">{/* Planner — Tasks 11/12 */}</div>
+        <div className="min-w-0 lg:w-2/3">
+          <Planner
+            program={program}
+            readOnly={readOnly}
+            exercises={exercises}
+            warningsByDay={warningsByDay}
+            onChange={setProgram}
+          />
+        </div>
         <div className="lg:w-1/3">{/* Analytics — Task 13 */}</div>
       </div>
     </div>
