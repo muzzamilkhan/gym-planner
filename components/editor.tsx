@@ -1,0 +1,64 @@
+'use client'
+
+import { useMemo } from 'react'
+import {
+  getCoverage,
+  getRecoveryWarnings,
+  getTargets,
+  getWeeklyVolume,
+  type Program,
+  type RecoveryWarning,
+} from '@/lib/engine'
+import { allExercises } from '@/lib/exercises'
+import { useProgram } from '@/hooks/use-program'
+import { Header } from '@/components/header'
+import { SetupBar } from '@/components/setup-bar'
+
+export function Editor({
+  initial,
+  readOnly = false,
+  onCopyProgram,
+}: {
+  initial: { program: Program; editId?: string; viewId?: string }
+  readOnly?: boolean
+  onCopyProgram?: () => void
+}) {
+  const { program, setProgram, saveState, editId, viewId, retry } = useProgram(initial)
+  const exercises = useMemo(() => allExercises(program), [program])
+  const targets = useMemo(
+    () => getTargets(program.focus, program.experience, program.goal),
+    [program.focus, program.experience, program.goal],
+  )
+  const volume = useMemo(() => getWeeklyVolume(program, exercises), [program, exercises])
+  const coverage = useMemo(
+    () => getCoverage(volume, targets, program.goal),
+    [volume, targets, program.goal],
+  )
+  const warnings = useMemo(() => getRecoveryWarnings(program, exercises), [program, exercises])
+  const warningsByDay = useMemo(() => {
+    const m = new Map<number, RecoveryWarning[]>()
+    for (const w of warnings) m.set(w.dayB, [...(m.get(w.dayB) ?? []), w])
+    return m
+  }, [warnings])
+
+  return (
+    <div className="flex min-h-screen flex-col">
+      <Header
+        program={program}
+        readOnly={readOnly}
+        saveState={saveState}
+        editId={editId}
+        viewId={viewId}
+        retry={retry}
+        onCopyProgram={onCopyProgram}
+        onChangeName={(name) => setProgram((p) => ({ ...p, name }))}
+        onChangeDescription={(description) => setProgram((p) => ({ ...p, description }))}
+      />
+      <SetupBar program={program} readOnly={readOnly} onChange={setProgram} />
+      <div className="flex flex-1 gap-4 p-4 max-lg:flex-col">
+        <div className="min-w-0 lg:w-2/3">{/* Planner — Tasks 11/12 */}</div>
+        <div className="lg:w-1/3">{/* Analytics — Task 13 */}</div>
+      </div>
+    </div>
+  )
+}
