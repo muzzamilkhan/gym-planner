@@ -7,8 +7,9 @@ datasource db {
   // Pooled (PgBouncer) endpoint for runtime queries.
   url       = env("DATABASE_URL")
   // Unpooled endpoint — migrations need DDL and advisory locks,
-  // which are unreliable through a transaction pooler.
-  directUrl = env("DIRECT_URL")
+  // which are unreliable through a transaction pooler. Neon's Vercel
+  // integration injects DATABASE_URL_UNPOOLED automatically.
+  directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
 model Program {
